@@ -443,8 +443,31 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
       goto get_out;
    }
 
+   MD5Context md5ctx;
+   
+   MD5Init(&md5ctx);
+   while (fgets(buf, sizeof(buf), ctx.infile)) {
+      MD5Update(&md5ctx, (unsigned char *)buf, strlen(buf));
+   }
+   MD5Final((unsigned char *)signature, &md5ctx);
+     
+   // Set up S3PutProperties
+   S3PutProperties properties =
+    {
+        0,                                       // contentType
+        signature                                // md5
+        0,                                       // cacheControl
+        0,                                       // contentDispositionFilename
+        0,                                       // contentEncoding
+       -1,                                       // expires
+        0,                                       // cannedAcl
+        0,                                       // metaDataCount
+        0,                                       // metaData
+        0                                        // useServerSideEncryption
+    };
+   
    ctx.caller = "S3_put_object";
-   S3_put_object(&s3ctx, cloud_fname, ctx.obj_len, NULL, NULL, 0,
+   S3_put_object(&s3ctx, cloud_fname, ctx.obj_len, putProperties, NULL, 0,
                &putObjectHandler, &ctx);
 
 get_out:
