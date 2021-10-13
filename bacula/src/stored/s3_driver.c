@@ -462,7 +462,7 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
         0,                                       // contentDispositionFilename
         0,                                       // contentEncoding
        -1,                                       // expires
-        cannedAcl,                               // cannedAcl
+        S3CannedAclPrivate,                      // cannedAcl
         0,                                       // metaDataCount
         0,                                       // metaData
         0                                        // useServerSideEncryption
