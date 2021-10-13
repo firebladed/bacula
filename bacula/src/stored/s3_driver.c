@@ -444,6 +444,8 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
    }
 
    MD5Context md5ctx;
+   char buf[5000];
+   char signature[20];
    
    MD5Init(&md5ctx);
    while (fgets(buf, sizeof(buf), ctx.infile)) {
