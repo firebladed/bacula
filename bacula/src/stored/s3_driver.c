@@ -454,7 +454,7 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
    MD5Final((unsigned char *)signature, &md5ctx);
      
    // Set up S3PutProperties
-   S3PutProperties properties =
+   S3PutProperties putProperties =
     {
         0,                                       // contentType
         signature,                               // md5
