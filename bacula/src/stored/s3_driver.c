@@ -457,7 +457,7 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
    S3PutProperties properties =
     {
         0,                                       // contentType
-        signature                                // md5
+        signature,                               // md5
         0,                                       // cacheControl
         0,                                       // contentDispositionFilename
         0,                                       // contentEncoding
