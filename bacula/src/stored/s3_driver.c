@@ -422,6 +422,7 @@ S3PutObjectHandler putObjectHandler =
  */
 S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const char *cloud_fname)
 {
+  
    Enter(dbglvl);
    bacula_ctx ctx(xfer);
    ctx.limit = upload_limit.use_bwlimit() ? &upload_limit : NULL;
@@ -446,18 +447,56 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
    MD5Context md5ctx;
    char buf[5000];
    char signature[20];
+   char md5[33];
+   size_t result;
+   char MD5buf[40]; 
+
    
    MD5Init(&md5ctx);
-   while (fgets(buf, sizeof(buf), ctx.infile)) {
-      MD5Update(&md5ctx, (unsigned char *)buf, strlen(buf));
+
+   rewind ( ctx.infile);
+
+   do
+   {
+   // read block of file
+   result = fread (&buf,1,5000,ctx.infile);
+
+   // Update Md5
+   MD5Update(&md5ctx, (unsigned char *)buf, result);
+
    }
+   while (!feof(ctx.infile));
+
    MD5Final((unsigned char *)signature, &md5ctx);
-     
-   // Set up S3PutProperties
-   S3PutProperties putProperties =
-    {
+
+   rewind(ctx.infile);
+
+   static const char hexDigits[17] = "0123456789ABCDEF";
+
+   for (int i=0; i < 16; i++)
+   {
+     md5[i*2]   = hexDigits[(signature[i] >> 4) & 0xF];
+     md5[i*2+1] = hexDigits[signature[i] & 0xF];
+   }
+   md5[32]='\0';
+      
+   Dmsg1(10, "%s Calculated MD5: %s\n",cache_fname, md5 );
+
+   char MD5buf[40];                 /* 24 should do */
+   memset(MD5buf, 0, 40);
+   bin_to_base64(MD5buf, sizeof(MD5buf), (char *)signature, 16, true); /* encode 16 bytes */
+   // bin_to_base64 doest pad base64 output pad to multple of 3
+   // md5 has are fixed length
+   MD5buf[22] = '=';
+   MD5buf[23] = '=';
+
+   Dmsg1(10, "%s Calculated Base64 MD5: %s\n",cache_fname,  MD5buf);
+   
+    // Set up S3PutProperties
+   S3PutProperties putProperties;
+   putProperties = {
         0,                                       // contentType
-        signature,                               // md5
+        MD5buf,                                  // md5 (base64 encoded)
         0,                                       // cacheControl
         0,                                       // contentDispositionFilename
         0,                                       // contentEncoding
@@ -469,7 +508,7 @@ S3Status s3_driver::put_object(transfer *xfer, const char *cache_fname, const ch
     };
    
    ctx.caller = "S3_put_object";
-   S3_put_object(&s3ctx, cloud_fname, ctx.obj_len, putProperties, NULL, 0,
+   S3_put_object(&s3ctx, cloud_fname, ctx.obj_len, &putProperties, NULL, 0,
                &putObjectHandler, &ctx);
 
 get_out:
