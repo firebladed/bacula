@@ -331,12 +331,7 @@ int main(int argc, char *argv[])
    while (fgets(buf, sizeof(buf), fd)) {
       MD5Update(&ctx, (unsigned char *)buf, strlen(buf));
    }
-   
-   // obtain file size:
-   fseek (fd , 0 , SEEK_END);
-   lsize = ftell (fd);
-   rewind (fd);
-
+ 
    do
    {
    // read block of file
