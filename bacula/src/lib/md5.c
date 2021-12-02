@@ -326,11 +326,6 @@ int main(int argc, char *argv[])
       goto decode_it;
    }
    MD5Init(&ctx);
-   
-   
-   while (fgets(buf, sizeof(buf), fd)) {
-      MD5Update(&ctx, (unsigned char *)buf, strlen(buf));
-   }
  
    do
    {
