@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
    do
    {
    // read block of file
-   result = fread (&buf,1,5000,fd);
+   result = fread (&buf,1,sizeof(buf),fd);
 
    // Update Md5
    MD5Update(&ctx, (unsigned char *)buf, result);
